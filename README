@@ -1,0 +1,58 @@
+
+
+                                                       CHARMOL
+  
+                          program for making high-quality pictures of molecular structures
+                               using POV-Ray (Persistence of Vision Raytracer) or VRML
+
+
+
+Charmol is a command-line based program for making high-quality pictures of molecular structures for Linux and MacOS.
+It is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+Charmol program comes with ABSOLUTELY NO WARRANTY!
+
+If you use charmol for producing publications, please cite the program as follows:
+
+ "Chalupsky, J.: Charmol - program for molecular graphics, Prague, Czech Republic, 2012."
+
+Charmol works with simple ascii file input, its output can be either VRML or POV-Ray file containing the 3D scene (in case of
+POV-Ray, picture rendering is automatically done from charmol by calling POV-Ray program). It is mainly oriented to small- and
+medium-size molecules including orbitals, arrows etc., but it is of course also capable of doing pictures of whole proteins and
+DNA using the 'all atoms' model. Very important feature of this program is the possibility to draw as many orbitals, surfaces and
+vibrations as you wish during one run (without user interaction), which is not usual for graphical-interface based programs and may
+be often found helpful.
+
+Charmol is capable of doing pictures containing:
+
+ - from small- to large-size molecules
+ - more molecules together (also with different settings)
+ - orbitals using molden and fchk files (GTO functions up to 'h' angular momentum supported)
+ - surfaces using gaussian cube files (also color-mapped surfaces according to potential)
+   (many orbitals or surfaces can be generated without user interaction)
+ - schematic representation of vibrations using arrows
+ - user-defined arrows representing vectorial properties
+ - measuring gauges
+ - combinations of some of these features (for example more orbitals together, orbitals and arrows together etc.)
+
+Although default settings should produce very reasonable design of molecules and other objects, fine tuning of the design according
+to ones needs is incorporated in the code. Users can change colors of basicaly all objects, scale radii of atoms and bonds, scale
+arrows etc.
+
+In order to produce faster code, time-consuming parts are parallelized using OpenMP. Charmol can be run either on a local machine,
+or on a remote host using standard tools like queue system.
+
+Package includes examples of input files located in the directory {your_destination_of_release}/examples.
+
+For bug reporting and suggestions about additional functions, please contact the author:
+ Jakub Chalupsky       (email: chalupsky.jakub@gmail.com)
+
+Before reporting a bug, please first make sure that the problem is caused by charmol program and not by running povray (try to use
+command-line option 'povrayverbose' when running charmol to see what povray prints during its run).
+
+Many thanks go to Tibor Andras Rokob.
+
+
+Enjoy the program!
+
+

@@ -1,0 +1,47 @@
+#!/bin/bash
+
+echo "// Copyright (C) 2012 by Jakub Chalupsky (chalupsky.jakub@gmail.com)"        > charatomsinfo.c
+echo "//"                                                                         >> charatomsinfo.c
+echo "// This program is free software: you can redistribute it and/or modify"    >> charatomsinfo.c
+echo "// it under the terms of the GNU General Public License as published by"    >> charatomsinfo.c
+echo "// the Free Software Foundation, either version 3 of the License, or"       >> charatomsinfo.c
+echo "// (at your option) any later version."                                     >> charatomsinfo.c
+echo "//"                                                                         >> charatomsinfo.c
+echo "// This program is distributed in the hope that it will be useful,"         >> charatomsinfo.c
+echo "// but WITHOUT ANY WARRANTY; without even the implied warranty of"          >> charatomsinfo.c
+echo "// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the"            >> charatomsinfo.c
+echo "// GNU General Public License for more details."                            >> charatomsinfo.c
+echo "//"                                                                         >> charatomsinfo.c
+echo "// You should have received a copy of the GNU General Public License"       >> charatomsinfo.c
+echo "// along with this program. If not, see http://www.gnu.org/licenses/."      >> charatomsinfo.c
+echo ""                                                                           >> charatomsinfo.c
+
+echo "#include <stdio.h>"                                                         >> charatomsinfo.c
+echo "#include <stdlib.h>"                                                        >> charatomsinfo.c
+echo "#include <string.h>"                                                        >> charatomsinfo.c
+echo ""                                                                           >> charatomsinfo.c
+echo "#include \"charatomsinfo.h\""                                               >> charatomsinfo.c
+echo ""                                                                           >> charatomsinfo.c
+echo "char **atomsinfo_fill_default_settings()"                                   >> charatomsinfo.c
+echo "{"                                                                          >> charatomsinfo.c
+echo "int rad, nrad, nsl;"                                                        >> charatomsinfo.c
+echo "char **atoms;"                                                              >> charatomsinfo.c
+echo ""                                                                           >> charatomsinfo.c
+echo "atoms = NULL;"                                                              >> charatomsinfo.c
+echo "nrad = 120;"                                                                >> charatomsinfo.c
+echo "nsl = 100;"                                                                 >> charatomsinfo.c
+echo ""                                                                           >> charatomsinfo.c
+echo "if((atoms = (char **) \
+malloc(nrad*sizeof(char *)))==NULL) \
+{puts(\"\nMemory allocation failed!\n\"); exit(1);}"                              >> charatomsinfo.c
+echo "rad = 0;"                                                                   >> charatomsinfo.c
+cat charatomsinfo.info | awk -F '\0' '{printf("if((atoms[rad] \
+= (char *) malloc(nsl*sizeof(char)))==NULL) \
+{puts(\"\\nMemory allocation failed!\\n\"); \
+exit(1);} strcpy(atoms[rad], \"%s\"); rad++;\n", $1)}'                            >> charatomsinfo.c
+echo "atoms[rad] = NULL;"                                                         >> charatomsinfo.c
+echo ""                                                                           >> charatomsinfo.c
+echo "return atoms;"                                                              >> charatomsinfo.c
+echo "}"                                                                          >> charatomsinfo.c
+echo ""                                                                           >> charatomsinfo.c
+

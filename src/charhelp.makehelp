@@ -1,0 +1,30 @@
+#!/bin/bash
+
+echo "// Copyright (C) 2012 by Jakub Chalupsky (chalupsky.jakub@gmail.com)"        > charhelp.c
+echo "//"                                                                         >> charhelp.c
+echo "// This program is free software: you can redistribute it and/or modify"    >> charhelp.c
+echo "// it under the terms of the GNU General Public License as published by"    >> charhelp.c
+echo "// the Free Software Foundation, either version 3 of the License, or"       >> charhelp.c
+echo "// (at your option) any later version."                                     >> charhelp.c
+echo "//"                                                                         >> charhelp.c
+echo "// This program is distributed in the hope that it will be useful,"         >> charhelp.c
+echo "// but WITHOUT ANY WARRANTY; without even the implied warranty of"          >> charhelp.c
+echo "// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the"            >> charhelp.c
+echo "// GNU General Public License for more details."                            >> charhelp.c
+echo "//"                                                                         >> charhelp.c
+echo "// You should have received a copy of the GNU General Public License"       >> charhelp.c
+echo "// along with this program. If not, see http://www.gnu.org/licenses/."      >> charhelp.c
+echo ""                                                                           >> charhelp.c
+
+echo "#include <stdio.h>"                                                         >> charhelp.c
+echo ""                                                                           >> charhelp.c
+echo "#include \"charhelp.h\""                                                    >> charhelp.c
+echo ""                                                                           >> charhelp.c
+echo "void help_print()"                                                          >> charhelp.c
+echo "{"                                                                          >> charhelp.c
+echo ""                                                                           >> charhelp.c
+cat charhelp.help | awk -F '\n' '{printf("puts(\"%s\");\n", $1)}'                 >> charhelp.c
+echo ""                                                                           >> charhelp.c
+echo "}"                                                                          >> charhelp.c
+echo ""                                                                           >> charhelp.c
+

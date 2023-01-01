@@ -1,0 +1,258 @@
+
+
+                                                     CHARMOL
+  
+                        program for making high-quality pictures of molecular structures
+                             using POV-Ray (Persistence of Vision Raytracer) or VRML
+
+
+syntax: charmol inputfile [povrayverbose] [hiderendering/norendering]
+        - 'povrayverbose' option forces printing of information provided by povray during rendering
+        - 'hiderendering' option supresses showing progress of povray rendering in graphical form
+        - 'norendering' option supresses povray rendering
+        - '-h' or '--help' options serve for printing the help
+
+1) charmol is a program for making high-quality pictures of molecular structures
+   - it is capable of doing pictures of more molecules together, depiction of orbitals and other surfaces, schematic depiction of vibrations
+     and other user defined arrows, measuring gauges, fine tuning of the design according to ones needs (user defined colors, radii), etc.
+   - default settings are carefully chosen in order to produce reasonable results without need of 'advanced' input editing
+   - simple ascii file serves as input, its output can be either vrml or povray file containing the 3D scene
+     if povray output is chosen, povray is automatically called by the charmol program to create the picture
+
+2) structure of the input file
+   2a) lines beginning with '#' are comments
+   2b) input is normaly composed of sections and keywords with their arguments
+   2c) every global (not belonging to a section) keyword must be on a separate line and outside all the sections (with 'cubefile' exception),
+       otherwise some of the required user-specified settings could be neglected (possibly without any error message)
+       keywords belonging to sections can be (has to be) arbitrarily combined on single line inside of the particular section
+       reading of the input is case sensitive - all sections, keywords and string arguments has to be specified like they are printed here
+       (i.e. charmol input file should be composed only of small letters except names of external files and possibly element symbols)
+   2d) sections:
+       - xyz [au/angstrom] (endxyz)     - mandatory, if none of the molden, fchk or cube external files was used
+                                          if geometry is in atomic units, 'au' has to be specified on the line containing 'xyz' directive
+                                          (by default, geometry is expected to be in angstroms)
+                                          lines between xyz and endxyz are interpreted, each line must contain element symbol and xyz coordinates
+                                          it can optionaly also contain molecular identification (mid) if you want more molecules in 1 picture
+                                          atoms with the same value of user-specified integer mid are interpreted as one molecule
+                                          when mids are used, make sure that some mid value is ascribed to each atom
+                                          mids can be also specified in external molden file, cube file or fchk file
+                                          (for mids in fchk, add section 'Molecular ids' with syntax like 'Atomic numbers' section has)
+                                          syntax of a line: element_symbol x y z [mid]
+                                          (examples: H 0.0 0.0 0.0, Cl 1.0 0.0 0.3 1)
+       - atomcolor (endatomcolor)       - optional, lines between atomcolor and endatomcolor are interpreted, each line contains information
+                                          about color (RGB in <0.0,1.0>) of atoms specified by either element symbol or number of atom
+                                          (examples of a line: 2 0.2 0.3 0.2, Cl 0.0 1.0 0.0)
+       - atomscale (endatomscale)       - optional, lines between atomscale and endatomscale are interpreted, each line contains information
+                                          about scale of depicted radii of atoms specified by either element symbol or number of atom
+                                          (examples of a line: 2 0.9, Cl 1.3)
+       - arrow (endarrow)               - optional, lines between arrow and endarrow are interpreted, each line contains information
+                                          about one arrow which should be added to the picture
+                                          each line can have three different forms:
+                                           1. atom_number scale x y z r g b
+                                              - places arrow defined by (x,y,z) and its scaling factor 'scale' on atom 'atom_number'
+                                                arrow has (r,g,b) color in RGB scale (each number in <0.0,1.0>)
+                                           2. orig scale x y z r g b
+                                              - places arrow to the origin of coordinate system
+                                           3. coor scale x y z r g b i j k
+                                              - places arrow to user specified coordinates (i,j,k)
+                                          (example of a line: 9 0.5 0.000000 -0.257785 -3.818825 0.8 0.2 0.8)
+       - vibration (endvibration)       - optional, lines between vibration and endvibration are interpreted
+                                          depiction of vibrations works with external molden file
+                                          lines not containing vibration specification change settings for all vibrations,
+                                          otherwise settings are changed for particular vibration (overwriting previous settings)
+                                          each line can contain following keywords and their arguments:
+                                           1. vib n                     - specifies the vibration to depict (n is its order number: 1-3N)
+                                           2. vibrationscale x          - changes length of arrows (default x=1.0)
+                                           3. arradscale x              - changes radius of arrows (default x=1.0)
+                                                                          (conradscale is scaled accordingly)
+                                           4. conradscale x             - changes radius of cones (default x=1.0)
+                                           5. atomiccolors on/off       - turns on/off atomic colors for arrows (default off)
+                                           6. vibrationcolor r g b      - changes RGB color of arrows (default black - r=0.0 g=0.0 b=0.0)
+                                           7. includeatoms a1 a2 ...    - specifies atoms, for which displacement will be shown
+                                           8. excludeatoms a1 a2 ...    - specifies atoms, for which displacement will not be shown
+                                          (atoms in includeatoms and excludeatoms can be specified separately or by ranges aN-aM)
+                                          (by default, displacements will be shown for all atoms of the molecule)
+                                          (example of a line: vib 7 vibrationscale 0.8 excludeatoms 1 3-6 9)
+       - orbital (endorbital)           - optional, lines between orbital and endorbital are interpreted
+                                          depiction of orbitals works with external molden or fchk file and GTO basis sets
+                                          lines not containing orbital specification change settings for all orbitals,
+                                          otherwise settings are changed for particular orbitals (overwriting previous settings)
+                                          each line can contain following keywords and their arguments:
+                                           1. generalcontraction on/off - turns on/off using general contraction
+                                                                          (default on for generally-contracted basis sets)
+                                           2. prescreening on/off       - turns on/off using prescreening of contributions of GTOs (default on)
+                                                                          if you are not sure about the result, turn the prescreening off
+                                           3. prescreeningfactor x      - changes factor used for prescreening of contributions of GTOs
+                                                                          contributions smaller than 'x*isovalue' are neglected (default x=0.001)
+                                           4. gridsizescale x           - rescales the grid size used for calculation (default x=1.0)
+                                                                          (useful especially for very diffuse orbitals, for example Rydbergs)
+                                           5. griddensity density       - changes the density of the grid
+                                                                          density can be: verylow, low, medium, high, veryhigh (default medium)
+                                           6. longfilenames on/off      - turns on/off using long filenames (default off)
+                                                                          can be useful for tuning the settings for depiction of orbitals
+                                           7. isovalue x                - changes isovalue used for depiction (default x=0.05)
+                                           8. positivecolor r g b       - changes color of positive part of orbital (default blue - r=0.0 g=0.0 b=1.0)
+                                           9. negativecolor r g b       - changes color of negative part of orbital (default red - r=1.0 g=0.0 b=0.0)
+                                          10. transparency x            - changes transparency of orbital (default no transparency - x=0.0)
+                                          11. style type                - changes the style of orbital (type can be 'solid' or 'wireframe', default solid)
+                                          12. alpha o1 o2 ...           - specifies alpha orbitals to calculate and depict
+                                          13. beta o1 o2 ...            - specifies beta orbitals to calculate and depict
+                                          14. combineorbitals alpha o1 o2 ... beta o1 o2 ...
+                                                                        - produces an extra file containing combination of orbitals
+                                                                          (orbitals settings are taken from previous specifications for particular orbitals)
+                                          (orbitals can be specified separately or by ranges oN-oM, each oN can be specified in two different ways:
+                                           if symmetry of orbital is used, specification is taken as an orbital label, otherwise it is taken as an
+                                           orbital ordering number - for example '3a1' and '7' could represent the same orbital)
+                                          (if you use 'all' as o1 argument, all alpha or beta orbitals will be done)
+                                          (example of a line: alpha 1-2 beta 1 isovalue 0.05 transparency 0.3)
+       - surface (endsurface)           - optional, lines between surface and endsurface are interpreted
+                                          depiction of surfaces works with external gaussian cube files with orthogonal voxels and
+                                          data for scalar properties like densities and orbitals
+                                          there can be specified arbitrary number of cube files (multiple cubefile directives)
+                                          geometry is read from the first cube file found (it can be either outside or inside the surface section)
+                                          only cube files specified inside the surface section are used for depiction of surfaces
+                                          lines not containing cubefile specification change settings for all surfaces,
+                                          otherwise settings are changed for particular surfaces (overwriting previous settings)
+                                          each line can contain following keywords and their arguments:
+                                           1. cubefile filename         - specifies the gaussian cube file to use
+                                           2. isovalue x                - changes isovalue used for depiction
+                                                                          (default x=0.05 for orbitals and x=0.1 for other types of surfaces)
+                                                                          (surface type is determined automatically from the cube file)
+                                           3. longfilenames on/off      - turns on/off using long filenames (default off)
+                                                                          can be useful for tuning the settings for depiction of surfaces
+                                           4. color r g b               - changes color of non-orbital surface (default yellow - r=1.0 g=1.0 b=0.0)
+                                           5. positivecolor r g b       - changes color of positive part of orbital (default blue - r=0.0 g=0.0 b=1.0)
+                                           6. negativecolor r g b       - changes color of negative part of orbital (default red - r=1.0 g=0.0 b=0.0)
+                                           7. transparency x            - changes transparency of surface (default no transparency - x=0.0)
+                                           8. style type                - changes the style of surface (type can be 'solid' or 'wireframe', default solid)
+                                           9. colormapped filename      - additional gaussian cube file (containing potential) is used to make color-mapped suface
+                                          10. orbitals o1 o2 ...        - specifies orbitals to depict for cube file containing more orbitals
+                                                                          (all orbitals found in cube file will be done by default)
+                                          (orbitals can be specified separately or by ranges oN-oM)
+                                          (example of a line: cubefile test.cube isovalue 0.5 transparency 0.2)
+
+   2e) keywords:
+       - keywords connected to making the 3D scene:
+         - addbond a1 a2                - adds bond connecting atoms a1 and a2 (atom numbers)
+                                          for the case that bond does not appear in the picture
+                                          (bonds are determined automatically by calculation of connectivity matrix from covalent radii)
+         - delbond a1 a2                - deletes bond connecting atoms a1 and a2 (atom numbers)
+         - delallbonds a1               - deletes all bonds connected to atom a1 (atom number)
+         - addgauge a1 a2 [x s r g b]   - adds measuring gauge connecting atoms a1 and a2 (atom numbers)
+                                          gauge is a special bond for measuring the distance between atoms
+                                          optional 'x s r g b' has following meaning and defaults:
+                                          x - scale of gauge radius (radius is 'x' times radius of a real bond, default x=0.4)
+                                          s - style of gauge, it can be dashed, dotted, dotdashed or solid (default s=dashed)
+                                          r g b - color of gauge (default black - r=0.0 g=0.0 b=0.0)
+         - atomradiusscale x [mid]      - changes the scale of spheres representing atoms (default x=0.4)
+                                          thickness of other objects (bonds and arrows) is scaled accordingly
+                                          when optional mid is used, settings are changed only for corresponding molecule
+                                          when mid is not used, it changes settings for all molecules present in the input
+                                          (independently on the fact, whether mid was or was not used in the xyz section)
+         - lightatomradiusscale x [mid] - changes the scale of spheres representing light atoms (default x=1.5)
+                                          (see section xyz and keyword atomradiusscale for details about meaning of optional mid)
+         - bondradiusscale x [mid]      - changes the scale of cylinders representing bonds (default x=1.0)
+                                          (see section xyz and keyword atomradiusscale for details about meaning of optional mid)
+         - arrowradiusscale x [mid]     - changes the scale of cylinders representing arrows (default x=1.0)
+                                          thickness of cones on the end of arrows is scaled accordingly
+                                          (see section xyz and keyword atomradiusscale for details about meaning of optional mid)
+         - coneradiusscale x [mid]      - changes the scale of cones on the end of arrows (default x=1.0)
+                                          (see section xyz and keyword atomradiusscale for details about meaning of optional mid)
+         - hideatoms                    - supresses the atomic spheres depiction (no argument)
+         - noatomcolor                  - supresses using different colors for different elements (no argument)
+                                          when specified defaultatomcolor is automatically used
+         - nobondcolor                  - supresses the bicolor bonds depiction (no argument)
+                                          when specified defaultbondcolor is automatically used
+         - defaultatomcolor r g b [mid] - changes the default atom color (default black - r=0.0 g=0.0 b=0.0)
+                                          when specified noatomcolor is automatically used
+                                          if neither nobondcolor nor defaultbondcolor is used, defaultatomcolor is used also for bonds
+                                          (see section xyz and keyword atomradiusscale for details about meaning of optional mid)
+         - defaultbondcolor r g b [mid] - changes the default bond color (default grey - r=0.7 g=0.7 b=0.7)
+                                          when specified nobondcolor is automatically used
+                                          (see section xyz and keyword atomradiusscale for details about meaning of optional mid)
+         - nocenterofmass               - supresses moving the center of mass of the molecule to the origin of coordinate system
+                                          (no argument, when used depiction is made using original coordinates)
+         - atomsinfofile file           - user specified file with atomic properties is used instead of default settings
+                                          file should contain line per atom with syntax 'element_symbol covalent_radius r g b mass atomic_number'
+                                          (i.e. symbol of the element, its covalent radius, color in RGB scale, its atomic mass and number of protons)
+                                          (default settings can be found in {your_destination_of_release}/src/charatomsinfo.info)
+         - moldenfile file              - user specified molden file is used, only one (first specified) molden file is used
+                                          (atomic colors, scales, arrows, gauges etc. specified in charmol input are still used)
+         - fchkfile file                - user specified fchk file is used, only one (first specified) fchk file is used
+                                          (atomic colors, scales, arrows, gauges etc. specified in charmol input are still used)
+         - cubefile file                - user specified gaussian cube file is used, only one (first specified) cube file is used for
+                                          reading the geometry (it can be, but does not have to be, specified outside the surface section)
+                                          see section surface for more details about using gaussian cube files
+                                          (atomic colors, scales, arrows, gauges etc. specified in charmol input are still used)
+         - output format                - specification of output file format, format can be povray or vrml (default is povray)
+                                          in case of vrml, its version 2.0 is used (also known as VRML97)
+
+       - keywords connected to povray settings (see povray documentation for detailed explanation of some of them):
+         (note that some of these keywords automatically supress using of some others to avoid meaningless transfomations)
+         - cameraposition x y z         - changes the location of camera to (x,y,z)
+                                          by default location of camera is automatically calculated along the z axis
+         - camerarotquat x y z w        - rotates the camera position according to specified rotational quaternion
+                                          meaning of the parameters come from the quaternion definition q = w + ix + jy + kz
+         - camerazoom value             - performs zooming by value in percents, positive values correspond to zoom in
+         - scenerotation angle          - rotates the scene around vector of view (picture in its own plane) by angle in degrees
+                                          positive values correspond to clockwise rotation, independently on handedness chosen
+         - camerasky x y z              - changes the camera sky vector (povray default is (0,1,0))
+                                          this can serve for the same thing as scenerotation
+         - camerarotation x y z         - rotates the camera around the 3 axes by (x,y,z) in degrees
+                                          serves for specification of general rotation of the scene
+         - handedness right/left        - changes the scene handedness (default is right-handed scene)
+         - noangleuse                   - supresses usage of camera angle (default 15° angle is used)
+         - moldenview                   - invokes production of scene from the same view like molden uses
+                                          (scene is viewed from z axis, right handed coordinate system and scenerotation by -90° is used)
+         - finish i j k                 - changes settings for finishing the design (default i=0.2 j=0.8 k=0.8)
+                                          (i stands for ambient, j for diffuse and k for specular)
+         - nofinish                     - supresses finishing of the design (finishing is used by default)
+
+       - keywords connected to vrml settings (see vrml documentation for detailed explanation):
+         - ambient i                    - changes the ambient intensity (default i=0.2)
+         - shininess i                  - changes the reflection shininess (default i=0.25)
+         - nofinish                     - supresses finishing of the design (finishing is used by default)
+
+3) setting the POV-Ray camera
+   - there are three ways how to set the povray camera with charmol program, they are listed here from the most to
+     the least 'easy-to-use' one (3a and 3b may alter depending on the case):
+   3a) use 'charcam' program (part of the charmol release)
+       - charcam is an interactive script which serves for setting the povray camera
+       - it is capable of making rotations around 3 axes (horizontal, vertical, and axis perpendicular to the plane
+         of monitor) and zooming
+       - all transformations done by the script are performed in the 'actual' coordinate system (like you would expect
+         when rotating the scene with mouse) using general rotations described by rotational quaternions
+       - try 'charcam -h' for more information
+   3b) use camera settings provided by VRML player (or other program capable of working with vrml or povray in 3D):
+       - camera settings can be represented either by rotational quaternion (use 'camerarotquat' charmol keyword),
+         or by camera position and sky vectors (use 'cameraposition' and 'camerasky' keywords)
+       - since vie3dscene is free and good VRML player for linux, we will show here the procedure with view3dscene in
+         more details:
+         - produce vrml output by charmol ('output vrml'), open it with view3dscene and find the desired view of the scene
+         - use 4-number vector from low-left corner with label 'Rotation quat' for 'camerarotquat' keyword (older versions of
+           view3dscene, in which rotational quaternion information is printed, for example 3.5.2) or
+           use 'Console -> Print Current Camera (VRML 2.0)' from menu and use printed vectors 'position' for 'cameraposition'
+           keyword and 'up' for 'camerasky' keyword, note that additional zooming using 'camerazoom' might be needed (newer
+           versions of view3dscene, for example 3.11)
+         - produce povray output with the new camera settings by charmol
+   3c) set the camera by hand by changing first 'cameraposition' keyword parameters and then tune the desired view by using
+       'scenerotation' keyword (or any other combination of possibilities provided in charmol program, see the section of help
+        about keywords connected to povray settings)
+
+4) OpenMP parallelization
+   - time-consuming parts of the code are parallelized using OpenMP, you can control the OpenMP functionality in a standart way,
+     for example number of processors to use is controled by setting the OMP_NUM_THREADS environment variable
+
+5) running the charmol program
+   - except classical run from command line on local machine, charmol can be also easily run on remote hosts (that can be convenient
+     for example in case of calculation of large number of orbitals), in such a case it is rather recommended to use version
+     with statically linked libraries to avoid version-related problems (see file {your_destination_of_release}/INSTALL for details)
+
+6) input examples
+   - some examples of input files are located in the directory {your_destination_of_release}/examples
+
+
+For bug reporting and suggestions about additional functions, please contact the author.
+   Jakub Chalupsky       (email: chalupsky.jakub@gmail.com)
+
+

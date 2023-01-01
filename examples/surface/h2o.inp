@@ -1,0 +1,10 @@
+
+cameraposition 35 0 -10
+scenerotation 90
+finish 0.3 0.7 0.4
+
+surface
+isovalue 0.01 transparency 0.4
+cubefile h2o.cube colormapped h2o.potential.cube
+endsurface
+

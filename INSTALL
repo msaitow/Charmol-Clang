@@ -1,0 +1,75 @@
+
+
+Requirements:
+-------------
+1) building charmol
+   - only standard C and OpenMP libraries and development files
+     (also their static versions might be needed - see Installation section bellow)
+
+2) running and using charmol
+   - bash shell
+   - POV-Ray (Persistence of Vision Raytracer)
+     - free software, which can be downloaded from http://www.povray.org/
+   - VRML player
+     - software for visualization of VRML V2.0 code in 3D
+     - there is a lot of such softwares, a lot of them is available for free
+     - recommendation:
+        view3dscene
+        - it works very well on standard Linux systems and it is free software (not tested by myself on MacOS)
+        - see its homepage http://castle-engine.sourceforge.net/view3dscene.php
+          older versions can be found at http://sourceforge.net/projects/vrmlengine/files/view3dscene/
+
+
+POV-Ray settings:
+-----------------
+1) since the quality of the pictures is determined by settings of the POV-Ray, these settings are very important
+2) what you need to do is set only a few things in your povray.ini file (it can be either global povray.ini
+   file for all users located, depending on the installation, for example in /etc/povray/3.6, or your own file
+   located in ~/.povray/3.6)
+3) very reasonable results can be obtain for example with following settings in povray.ini file:
+   (1600x1200 resolution and antialiasing in order to produce smooth design of the objects is used)
+
+    Width=1600
+    Height=1200
+    Antialias=On
+    Antialias_Threshold=0.3
+
+
+Installation:
+-------------
+1) unpack the charmol package
+
+    tar zxvf charmol-{release_number}.tar.gz
+
+2a) pre-built version
+    - there is a version of the code in {your_destination_of_release}/bin directory, which was built
+      using gnu C compiler and static linking of libraries, which should work fine on standard Linux systems
+      with x86_64 architecture (for different architectures and/or MacOS, build your own version)
+    - just include {your_destination_of_release}/bin directory into your PATH environment variable or copy the
+      'charmol' and 'charcam' files somewhere to your standard PATH (for example to /usr/local/bin)
+
+2b) building your own version
+    - go to directory containing source code
+
+       cd charmol-{release_number}/src
+
+    - make a symbolic link for the makefile of your choice
+      - there are 4 makefile - for gnu and intel compilers, each for static and dynamic linking
+      - if available, intel compiler is recommended (it produces faster binary code)
+      - if you want to run charmol also on remote hosts, static linking of libraries is recommended
+
+       ln -fs Makefile.intel.static Makefile             (or similarly for other choices)
+
+    - build the code
+
+       make
+
+    - install it to {your_destination_of_release}/bin
+
+       make install
+
+    - include {your_destination_of_release}/bin directory into your PATH environment variable or copy the
+      'charmol' and 'charcam' files somewhere to your standard PATH (for example to /usr/local/bin)
+
+
+

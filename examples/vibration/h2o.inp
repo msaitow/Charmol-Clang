@@ -1,0 +1,12 @@
+
+camerazoom -800
+
+moldenfile h2o.molden
+
+vibration
+vibrationscale 3.0 vibrationcolor 0.0 0.0 1.0 arradscale 0.6
+vib 7
+vib 8
+vib 9
+endvibration
+

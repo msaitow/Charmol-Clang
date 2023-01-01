@@ -1,0 +1,31 @@
+######  CHARMOL makefile  ###########################################################################
+######  Date for backup  ############################################################################
+DATE = `date "+%d.%m.%Y"`
+######  C Compiler  #################################################################################
+CC = icc
+######  C compilation flags  ########################################################################
+CFLAGS = -O2 -mcmodel=medium -openmp
+LDFLAGS = -lm -lpthread -liomp5
+######  Objects  ####################################################################################
+CSRC = charhelp.c charread.c charcheck.c charwrite.c charatoms.c charatomsinfo.c chararrow.c \
+       charvib.c charcalc.c charmesh.c charorb.c charsurf.c
+OBJ = $(CSRC:.c=.o)
+######  Main  #######################################################################################
+all : $(OBJ) charmol
+charmol : charmol.c $(OBJ)
+	$(CC) $(CFLAGS) $(OBJ) charmol.c -o charmol $(LDFLAGS)
+install : charmol charcam
+	mkdir -p ../bin
+	cp -f charmol charcam ../bin/
+help :
+	./charhelp.makehelp
+atomsinfo :
+	./charatomsinfo.makeinfo
+backup :
+	mkdir -p ../backup/$(DATE)
+	rsync --stats --progress -avz ./* ../backup/$(DATE)/ >& /dev/null
+cleanobj :
+	rm -f *.o
+clean :
+	rm -f charmol *.o
+#####################################################################################################

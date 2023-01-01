@@ -1,0 +1,264 @@
+#!/bin/bash
+#
+# Copyright (C) 2012 by Jakub Chalupsky (chalupsky.jakub@gmail.com)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see http://www.gnu.org/licenses/.
+#
+#
+# charcam script for setting the povray camera
+#
+
+############################################################################################################################################################
+# functions of charcam script
+
+printsyntax()
+ {
+ echo "Syntax: charcam inputfile [noediting]"
+ echo "Try '-h' or '--help' option for help."
+ }
+
+printtitle()
+ {
+ echo ""
+ echo ""
+ echo "                                           CHARCAM"
+ echo ""
+ echo "             interactive script for setting the povray camera for charmol program"
+ echo ""
+ echo ""
+ }
+
+printusage()
+ {
+ echo ""
+ echo ""
+ echo "Closing picture - press 'q' or click on it"
+ echo ""
+ echo "Possible scene transformation specifications (try 'charcam -h' for more details):"
+ echo " 'h value'   - rotation around horizontal axis in degrees (+ up/- down)"
+ echo " 'v value'   - rotation around vertical axis in degrees (+ right/- left)"
+ echo " 's value'   - rotation in plane of the picture in degrees (+ clockwise/- counterclockwise)"
+ echo " 'z value'   - zoom in percents of the distance (+ in/- out)"
+ echo " 'q'         - quit"
+ echo ""
+ echo ""
+ }
+
+printhelp()
+ {
+ echo "syntax: charcam inputfile [noediting]"
+ echo "        - 'noediting' option supresses editing of your original input file"
+ echo "          (by default the file is edited and picture is produced when you quit the program)"
+ echo "        - '-h' or '--help' options serve for printing the help"
+ echo ""
+ echo "1) program uses the same input as charmol program (see 'charmol -h' for more details)"
+ echo "   pictures produced during the process of setting the camera are displayed until you press 'q' or click on them"
+ echo "   direction of any of the rotations does not depend on the handedness used"
+ echo "   all transformations are applied successively, i.e. any transformation is applied in the actual"
+ echo "   coordinate system (like you would expect when rotating the scene with mouse)"
+ echo ""
+ echo "2) possible scene transformation specifications and their meanings are:"
+ echo "    'h value'   - rotation around horizontal axis is performed, value is expected to be in degrees"
+ echo "                  positive values represent rotation up, negative rotation down"
+ echo "    'v value'   - rotation around vertical axis is performed, value is expected to be in degrees"
+ echo "                  positive values represent rotation to right, negative rotation to left"
+ echo "    's value'   - rotation around vector of view is performed, value is expected to be in degrees"
+ echo "                  this rotation corresponds to rotation in plane of the picture"
+ echo "                  positive values represent clockwise rotation, negative counterclockwise rotation"
+ echo "    'z value'   - zooming of the picture is performed, value is expected to be in percents"
+ echo "                  distance of the camera from the origin of the scene is scaled by (1 - value/100)"
+ echo "                  positive values represent zoom in, negative zoom out"
+ echo "    'q'         - quit the program"
+ echo ""
+ echo ""
+ }
+
+cleantmpfiles()
+ {
+ rm "$tmpfile".*
+ }
+
+settmppovray()
+ {
+ if [ -e $tmpfile.pov ] ; then
+  tmppovray=$tmpfile.pov
+ else
+  ( ls "$tmpfile"*pov | sort -d | head -n 1 > $tmpfile.tmppovrayname ) >& /dev/null
+  tmppovray=`cat $tmpfile.tmppovrayname`
+  if [ "x$tmppovray" != "x" ] ; then
+   echo "Using alphabetically first povray file found..."
+  else
+   echo ""
+   echo ""
+   echo "Run of charmol has failed, you should see the problem below..."
+   charmol $file
+   cleantmpfiles
+   exit
+  fi
+ fi
+ }
+
+readcamspec()
+ {
+ printf "Specify scene transformation: "
+ read camspec
+ }
+
+makepicture()
+ {
+ if [ "$camspec" != "initial" -a "x$camspec" != "x" ] ; then
+  oldcamera="$camera"
+  oldhor="$hor"
+  oldver="$ver"
+  trtyp=`echo "$camspec" | awk '{print $1}'`
+  trval=`echo "$camspec" | awk '{print $2}'`
+  if [ "$trtyp" == "h" ] ; then
+   value=`echo "$trval" | awk '{printf("%.8f", -$1*(3.1415926536/360.0))}'`
+   rq=`echo "$oldhor $value" | awk '{printf("%.8f %.8f %.8f %.8f", cos($4), $1*sin($4), $2*sin($4), $3*sin($4))}'`
+   rq=`echo "$rq" | awk '{printf("%.8f %.8f %.8f %.8f", $1/sqrt($1*$1+$2*$2+$3*$3+$4*$4), $2/sqrt($1*$1+$2*$2+$3*$3+$4*$4),
+                                                        $3/sqrt($1*$1+$2*$2+$3*$3+$4*$4), $4/sqrt($1*$1+$2*$2+$3*$3+$4*$4))}'`
+   camera=`echo "$rq $oldcamera" | awk '{printf("%.8f %.8f %.8f", ($1*$1 + $2*$2 - $3*$3 - $4*$4)*$5 + (2*$2*$3 + 2*$1*$4)*$6 + (2*$2*$4 - 2*$1*$3)*$7,
+                                                                  (2*$2*$3 - 2*$1*$4)*$5 + ($1*$1 - $2*$2 + $3*$3 - $4*$4)*$6 + (2*$3*$4 + 2*$1*$2)*$7,
+                                                                  (2*$2*$4 + 2*$1*$3)*$5 + (2*$3*$4 - 2*$1*$2)*$6 + ($1*$1 - $2*$2 - $3*$3 + $4*$4)*$7)}'`
+   ver=`echo "$rq $oldver" | awk '{printf("%.8f %.8f %.8f", ($1*$1 + $2*$2 - $3*$3 - $4*$4)*$5 + (2*$2*$3 + 2*$1*$4)*$6 + (2*$2*$4 - 2*$1*$3)*$7,
+                                                            (2*$2*$3 - 2*$1*$4)*$5 + ($1*$1 - $2*$2 + $3*$3 - $4*$4)*$6 + (2*$3*$4 + 2*$1*$2)*$7,
+                                                            (2*$2*$4 + 2*$1*$3)*$5 + (2*$3*$4 - 2*$1*$2)*$6 + ($1*$1 - $2*$2 - $3*$3 + $4*$4)*$7)}'`
+  elif [ "$trtyp" == "v" ] ; then
+   value=`echo "$trval $handedness" | awk '{printf("%.8f", -$1*(3.1415926536/360.0)*$2)}'`
+   rq=`echo "$oldver $value" | awk '{printf("%.8f %.8f %.8f %.8f", cos($4), $1*sin($4), $2*sin($4), $3*sin($4))}'`
+   rq=`echo "$rq" | awk '{printf("%.8f %.8f %.8f %.8f", $1/sqrt($1*$1+$2*$2+$3*$3+$4*$4), $2/sqrt($1*$1+$2*$2+$3*$3+$4*$4),
+                                                        $3/sqrt($1*$1+$2*$2+$3*$3+$4*$4), $4/sqrt($1*$1+$2*$2+$3*$3+$4*$4))}'`
+   camera=`echo "$rq $oldcamera" | awk '{printf("%.8f %.8f %.8f", ($1*$1 + $2*$2 - $3*$3 - $4*$4)*$5 + (2*$2*$3 + 2*$1*$4)*$6 + (2*$2*$4 - 2*$1*$3)*$7,
+                                                                  (2*$2*$3 - 2*$1*$4)*$5 + ($1*$1 - $2*$2 + $3*$3 - $4*$4)*$6 + (2*$3*$4 + 2*$1*$2)*$7,
+                                                                  (2*$2*$4 + 2*$1*$3)*$5 + (2*$3*$4 - 2*$1*$2)*$6 + ($1*$1 - $2*$2 - $3*$3 + $4*$4)*$7)}'`
+   hor=`echo "$rq $oldhor" | awk '{printf("%.8f %.8f %.8f", ($1*$1 + $2*$2 - $3*$3 - $4*$4)*$5 + (2*$2*$3 + 2*$1*$4)*$6 + (2*$2*$4 - 2*$1*$3)*$7,
+                                                            (2*$2*$3 - 2*$1*$4)*$5 + ($1*$1 - $2*$2 + $3*$3 - $4*$4)*$6 + (2*$3*$4 + 2*$1*$2)*$7,
+                                                            (2*$2*$4 + 2*$1*$3)*$5 + (2*$3*$4 - 2*$1*$2)*$6 + ($1*$1 - $2*$2 - $3*$3 + $4*$4)*$7)}'`
+  elif [ "$trtyp" == "s" ] ; then
+   value=`echo "$trval $handedness" | awk '{printf("%.8f", -$1*(3.1415926536/360.0)*$2)}'`
+   viewvec=`echo "$camera" | awk '{printf("%.8f %.8f %.8f", -$1/sqrt($1*$1+$2*$2+$3*$3), -$2/sqrt($1*$1+$2*$2+$3*$3), -$3/sqrt($1*$1+$2*$2+$3*$3))}'`
+   rq=`echo "$viewvec $value" | awk '{printf("%.8f %.8f %.8f %.8f", cos($4), $1*sin($4), $2*sin($4), $3*sin($4))}'`
+   rq=`echo "$rq" | awk '{printf("%.8f %.8f %.8f %.8f", $1/sqrt($1*$1+$2*$2+$3*$3+$4*$4), $2/sqrt($1*$1+$2*$2+$3*$3+$4*$4),
+                                                        $3/sqrt($1*$1+$2*$2+$3*$3+$4*$4), $4/sqrt($1*$1+$2*$2+$3*$3+$4*$4))}'`
+   ver=`echo "$rq $oldver" | awk '{printf("%.8f %.8f %.8f", ($1*$1 + $2*$2 - $3*$3 - $4*$4)*$5 + (2*$2*$3 + 2*$1*$4)*$6 + (2*$2*$4 - 2*$1*$3)*$7,
+                                                            (2*$2*$3 - 2*$1*$4)*$5 + ($1*$1 - $2*$2 + $3*$3 - $4*$4)*$6 + (2*$3*$4 + 2*$1*$2)*$7,
+                                                            (2*$2*$4 + 2*$1*$3)*$5 + (2*$3*$4 - 2*$1*$2)*$6 + ($1*$1 - $2*$2 - $3*$3 + $4*$4)*$7)}'`
+   hor=`echo "$rq $oldhor" | awk '{printf("%.8f %.8f %.8f", ($1*$1 + $2*$2 - $3*$3 - $4*$4)*$5 + (2*$2*$3 + 2*$1*$4)*$6 + (2*$2*$4 - 2*$1*$3)*$7,
+                                                            (2*$2*$3 - 2*$1*$4)*$5 + ($1*$1 - $2*$2 + $3*$3 - $4*$4)*$6 + (2*$3*$4 + 2*$1*$2)*$7,
+                                                            (2*$2*$4 + 2*$1*$3)*$5 + (2*$3*$4 - 2*$1*$2)*$6 + ($1*$1 - $2*$2 - $3*$3 + $4*$4)*$7)}'`
+  elif [ "$trtyp" == "z" ] ; then
+   value=`echo "$trval" | awk '{printf("%.8f", (1.0 - ($1/100.0)))}'`
+   camera=`echo "$oldcamera $value" | awk '{printf("%.8f %.8f %.8f", $1*$4, $2*$4, $3*$4)}'`
+  fi
+  camx=`echo "$camera" | awk '{print $1}'`; camy=`echo "$camera" | awk '{print $2}'`; camz=`echo "$camera" | awk '{print $3}'`;
+  skyx=`echo "$ver" | awk '{print $1}'`; skyy=`echo "$ver" | awk '{print $2}'`; skyz=`echo "$ver" | awk '{print $3}'`;
+  sed -e "s/location /location <$camx, $camy, $camz> \/\//g" $tmppovray > $tmppovray.tmp && mv $tmppovray.tmp $tmppovray
+  sed -e "s/sky /sky <$skyx, $skyy, $skyz> \/\//g" $tmppovray > $tmppovray.tmp && mv $tmppovray.tmp $tmppovray
+  sed -e "s/light_source /light_source { <$camx, $camy, $camz> color rgb <1, 1, 1> } \/\//g" $tmppovray > $tmppovray.tmp && mv $tmppovray.tmp $tmppovray
+ fi
+ povray +P $tmppovray >& /dev/null
+ }
+
+############################################################################################################################################################
+# main part of charcam script
+
+if [ "x$1" == "x" ] ; then
+ printsyntax
+ exit
+elif [ "$1" == "-h" -o "$1" == "--help" ] ; then
+ printtitle
+ printhelp
+ exit
+fi
+
+if [ -e $1 ] ; then
+ file=$1
+else
+ echo "File '$1' does not exist. Exiting..."
+ exit
+fi
+if [ "$2" == "noediting" ] ; then
+ edit=0
+else
+ edit=1
+fi
+
+supresskeywords="cameraposition camerarotation camerarotquat camerasky camerazoom scenerotation moldenview output"
+
+printtitle
+tmpfile=$file.charcam_tmp
+cp -f $file $tmpfile.inp
+for i in $supresskeywords ; do
+ contain=`grep $i $tmpfile.inp | grep -v '#' | head -n 1 | awk '{print $1}'`
+ if [ "x$contain" != "x" ] ; then
+  echo "Supressing usage of '$i' option found in input file..."
+  sed -e "s/$i/#$i/g" $tmpfile.inp > $tmpfile.tmp && mv $tmpfile.tmp $tmpfile.inp
+ fi
+done
+echo "Setting initial camera sky vector to povray default..."
+echo "Setting initial camera position along z axis..."
+ver="0.0 1.0 0.0"
+hor="1.0 0.0 0.0"
+echo "camerasky $ver" >> $tmpfile.inp
+charmol $tmpfile.inp norendering >& /dev/null
+settmppovray
+convertxyzval=`grep convertxyzval $tmppovray | awk '{print $3}'`
+camera=`grep location $tmppovray | head -n 1 | awk -F '<' '{print $2}' | awk -F '>' '{print $1}' | awk '{printf("0.0 0.0 %f", $3)}'`
+hand=`grep handedness $tmpfile.inp | grep -v '#' | head -n 1 | awk '{print $2}'`
+if [ "$hand" == "left" ] ; then
+ handedness="1.0"
+else
+ handedness="-1.0"
+fi
+camspec="initial"
+printusage
+while [ "$camspec" != "q" ] ; do
+ makepicture
+ readcamspec
+done
+cleantmpfiles
+
+oldcamera="$camera"
+camera=`echo "$oldcamera $convertxyzval" | awk '{printf("%.8f %.8f %.8f", $1/$4, $2/$4, $3/$4)}'`
+
+echo ""
+echo "#################################################################################################################"
+echo ""
+echo "Your final povray camera settings for charmol program are:"
+echo ""
+echo "cameraposition $camera"
+if [ "$ver" != "0.0 1.0 0.0" ] ; then
+ echo "camerasky $ver"
+fi
+echo ""
+if [ "$edit" == "0" ] ; then
+ echo "Copy these settings into input file and run charmol to produce the final picture."
+ echo ""
+else
+ echo "Editing input file and producing the final picture."
+ echo ""
+ for i in $supresskeywords ; do
+  contain=`grep $i $file | grep -v '#' | head -n 1 | awk '{print $1}'`
+  if [ "x$contain" != "x" ] ; then
+   sed -e "s/$i/#$i/g" $file > $file.tmp && mv $file.tmp $file
+  fi
+ done
+ echo ""                                 >> $file
+ echo "# camera settings from charcam"   >> $file
+ echo "cameraposition $camera"           >> $file
+ echo "camerasky $ver"                   >> $file
+ echo ""                                 >> $file
+ charmol $file
+fi
+

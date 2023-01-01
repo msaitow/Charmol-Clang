@@ -1,0 +1,19 @@
+
+xyz
+O               0.00000000     0.00000000     0.00000000
+H               0.60710678    -0.80710678     0.00000000
+H               0.60710678     0.80710678     0.00000000
+endxyz
+
+arrow
+2 0.7  -1.5 -1 0  0.8 0.6 0.2
+3 0.7  -1.5  1 0  0.8 0.6 0.2
+endarrow
+arrowradiusscale 0.5
+
+addgauge 2 3 0.19 dotdashed 
+
+output vrml
+
+moldenview
+

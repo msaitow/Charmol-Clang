@@ -1,0 +1,15 @@
+
+
+Documentation for charmol and charcam programs can be printed by commands:
+--------------------------------------------------------------------------
+
+
+charmol -h
+
+
+or
+
+
+charcam -h
+
+

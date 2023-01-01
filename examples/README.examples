@@ -1,0 +1,19 @@
+
+
+Examples for charmol program:
+-----------------------------
+
+
+- each directory contains one or more examples
+- to see how it works, go to some of the directories and run command:
+  (with the exception of surface directory - gaussian cube files are not included
+   because of their size, final picture rendered with povray is there instead)
+
+
+   charmol some_input_filename
+
+
+- if you want to try also VRML outputs, add 'output vrml' option to input file
+  and run charmol (use for example view3dscene VRML player to view the .wrl file)
+
+
